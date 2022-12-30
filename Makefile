@@ -17,7 +17,7 @@ INCLUDES  := -I./include
 LDFLAGS   := -O3 -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp
 
 # the source files for the ecs game engine
-SRC_FILES := $(wildcard src/*.cpp)
+SRC_FILES := $(wildcard src/*.cpp src/**/*.cpp)
 OBJ_FILES := $(SRC_FILES:.cpp=.o)
 
 # all of these targets will be made if you just type make
