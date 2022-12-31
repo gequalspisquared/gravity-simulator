@@ -9,7 +9,7 @@
 
 #include "Entity.h"
 #include "EntityManager.h"
-#include "Vec3.h"
+#include "ncp/Vec3.h"
 
 struct PlanetConfig
 {
