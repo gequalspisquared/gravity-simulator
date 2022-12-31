@@ -6,6 +6,7 @@
 #include "EntityManager.h"
 #include "Components.h"
 #include "ncp/Vec3.h"
+#include "Callback.h"
 
 GLFWwindow *initializeGLFW(unsigned int windowWidth, unsigned int windowHeight);
 

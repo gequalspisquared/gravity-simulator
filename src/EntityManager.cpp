@@ -26,7 +26,8 @@ void EntityManager::update()
 
 std::shared_ptr<Entity> EntityManager::addEntity(const std::string &tag)
 {
-    auto entity = std::make_shared<Entity>(m_totalEntities++, tag);
+    // auto entity = std::make_shared<Entity>(m_totalEntities++, tag);
+    auto entity = std::shared_ptr<Entity>(new Entity(m_totalEntities++, tag));
     m_toAdd.push_back(entity);
     return entity;
 }
@@ -43,5 +44,6 @@ EntityVec& EntityManager::getEntities(const std::string &tag)
 
 void EntityManager::removeDeadEntities(EntityVec &vec)
 {
-    std::remove_if(vec.begin(), vec.end(), [](Entity &e){return !e.isActive();});
+    std::remove_if(vec.begin(), vec.end(), 
+                   [](auto &e){ return !e->isActive(); });
 }

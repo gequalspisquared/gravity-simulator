@@ -2,6 +2,10 @@
 
 #include "Callback.h"
 
+extern Camera camera;
+extern bool firstMouse;
+extern float lastX, lastY;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
