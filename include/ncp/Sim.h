@@ -10,6 +10,8 @@
 #include "Entity.h"
 #include "EntityManager.h"
 #include "ncp/Vec3.h"
+#include "Camera.h"
+#include "Shader.h"
 
 struct PlanetConfig
 {
@@ -32,6 +34,10 @@ namespace ncp
         bool           m_paused = false;
         bool           m_running = true;
         size_t         m_currentFrame = 0;
+        Camera         m_camera;
+        Shader         m_skyboxShader;
+        Shader         m_modelShader;
+        Shader         m_glowingShader;
 
         void init(const std::string &windowName, const std::string &config);
         void setPaused(bool paused);
