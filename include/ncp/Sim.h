@@ -31,6 +31,7 @@ namespace ncp
         EntityManager  m_entities;
         bool           m_paused = false;
         bool           m_running = true;
+        size_t         m_currentFrame = 0;
 
         void init(const std::string &windowName, const std::string &config);
         void setPaused(bool paused);
@@ -39,7 +40,7 @@ namespace ncp
         void sUserInput();
         void sRender();
 
-        void sSpawnPlanets();
+        // void sSpawnPlanets();
     };
 }
 
