@@ -2,6 +2,8 @@
 #define COMPONENTS_H
 
 #include "ncp/Vec3.h"
+#include "Model.h"
+#include "Skybox.h"
 
 class CTransform
 {
@@ -25,6 +27,28 @@ public:
 
     CGravity(const float mass)
         : mass(mass)
+    {
+    }
+};
+
+class CModel
+{
+public:
+    Model model;
+
+    CModel(const char *path)
+        : model(Model(path))
+    {
+    }
+};
+
+class CSkybox
+{
+public:
+    Skybox skybox;
+
+    CSkybox(const std::vector<std::string> &faces)
+        : skybox(Skybox(faces))
     {
     }
 };

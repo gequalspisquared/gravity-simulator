@@ -11,6 +11,8 @@ class Entity
 public: 
     std::shared_ptr<CTransform> cTransform;
     std::shared_ptr<CGravity> cGravity;
+    std::shared_ptr<CModel> cModel;
+    std::shared_ptr<CSkybox> cSkybox;
 
     bool isActive() const;
 

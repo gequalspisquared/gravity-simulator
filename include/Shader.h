@@ -12,8 +12,9 @@
 class Shader
 {
 public:
-    unsigned int ID;
+    unsigned int ID = 0;
 
+    Shader () {};
     Shader(const char *vertexPath, const char *fragmentPath);
 
     void use();
