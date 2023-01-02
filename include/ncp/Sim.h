@@ -34,7 +34,7 @@ namespace ncp
         bool           m_paused = false;
         bool           m_running = true;
         size_t         m_currentFrame = 0;
-        Camera         m_camera;
+        // Camera         m_camera;
         Shader         m_skyboxShader;
         Shader         m_modelShader;
         Shader         m_glowingShader;

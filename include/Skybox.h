@@ -8,6 +8,7 @@ class Skybox
 {
 public:
     Skybox(const std::vector<std::string> &faces);
+    Skybox() {}
     void draw(Shader &shader) const;
 
 private:

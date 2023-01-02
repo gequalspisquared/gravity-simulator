@@ -4,6 +4,7 @@ Skybox::Skybox(const std::vector<std::string> &faces)
     : cubemapTexture(loadCubemap(faces))
 {
     setupSkybox();
+    std::cout << "Setup skybox\n";
 }
 
 void Skybox::draw(Shader &shader) const
