@@ -163,6 +163,7 @@ void ncp::Sim::sRender()
 
         ncp::Vec3 entityPos = m_entities.getEntities("Gravity")[i]->cTransform->pos; 
         model = glm::translate(model, glm::vec3(entityPos.x, entityPos.y, entityPos.z));
+        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
         m_modelShader.setMat4("model", model);
     }
 
