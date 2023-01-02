@@ -88,13 +88,23 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
     m_skyboxShader = Shader("../shaders/skybox.vs", "../shaders/skybox.fs");
     m_modelShader  = Shader("../shaders/model_loading.vs", "../shaders/model_loading.fs");
 
-    auto mars = m_entities.addEntity("Mars");
+    auto mars = m_entities.addEntity("Gravity");
     mars->cTransform = std::make_shared<CTransform>(
         ncp::Vec3(0.0, 0.0, 0.0),
-        ncp::Vec3(0.0, 0.1, 0.0),
+        ncp::Vec3(0.0, 0.2, 0.0),
         ncp::Vec3(0.0, 0.0, 0.0)
     );
     mars->cModel = std::make_shared<CModel>("../res/mars/mars.obj");
+    mars->cGravity = std::make_shared<CGravity>(1.0);
+
+    auto earth = m_entities.addEntity("Gravity");
+    earth->cTransform = std::make_shared<CTransform>(
+        ncp::Vec3(2.0, 0.0, 0.0),
+        ncp::Vec3(0.0, -0.2, 0.0),
+        ncp::Vec3(0.0, 0.0, 0.0)
+    );
+    earth->cModel = std::make_shared<CModel>("../res/earth/earth.obj");
+    earth->cGravity = std::make_shared<CGravity>(1.0);
 }
 
 void ncp::Sim::setPaused(bool paused)
@@ -104,8 +114,9 @@ void ncp::Sim::setPaused(bool paused)
 
 void ncp::Sim::sMovement()
 {
+    computeForces(m_entities.getEntities("Gravity"));
     // newton method for now
-    for (auto &e : m_entities.getEntities("Mars")) {
+    for (auto &e : m_entities.getEntities("Gravity")) {
         e->cTransform->pos += e->cTransform->vel * dt;
     }
 }
@@ -142,14 +153,18 @@ void ncp::Sim::sRender()
     m_modelShader.setMat4("projection", projection);
     m_modelShader.setMat4("view", view);
 
-    glm::mat4 model = glm::mat4(1.0f);
     // for each planet
-    ncp::Vec3 entityPos = m_entities.getEntities("Mars")[0]->cTransform->pos;
-    model = glm::translate(model, glm::vec3(entityPos.x, entityPos.y, entityPos.z));
-    m_modelShader.setMat4("model", model);
+    size_t nGravity = m_entities.getEntities("Gravity").size();
+    for (size_t i = 0; i < nGravity; i++) {
+        glm::mat4 model = glm::mat4(1.0f);
 
-    // render every model
-    m_entities.getEntities("Mars")[0]->cModel->model.draw(m_modelShader);
+        // render every model
+        m_entities.getEntities("Gravity")[i]->cModel->model.draw(m_modelShader);
+
+        ncp::Vec3 entityPos = m_entities.getEntities("Gravity")[i]->cTransform->pos; 
+        model = glm::translate(model, glm::vec3(entityPos.x, entityPos.y, entityPos.z));
+        m_modelShader.setMat4("model", model);
+    }
 
     m_skyboxShader.use();
 
@@ -165,6 +180,25 @@ void ncp::Sim::sRender()
     glfwPollEvents();
 }
 
+void ncp::Sim::computeForces(const EntityVec &objects)
+{
+    size_t nObjects = objects.size();
+
+    for (size_t i = 0; i < nObjects - 1; i++)
+        for (size_t j = i + 1; j < nObjects; j++) {
+            const ncp::Vec3 p1 = objects[i]->cTransform->pos;
+            const ncp::Vec3 p2 = objects[j]->cTransform->pos;
+            const ncp::Vec3 r  = p2 - p1;
+
+            const double m1 = objects[i]->cGravity->mass;
+            const double m2 = objects[j]->cGravity->mass;
+
+            const ncp::Vec3 a = r * (0.5 * m1 * m2 / (r.mag2() * r.mag()));
+
+            objects[i]->cTransform->vel += a * dt;
+            objects[j]->cTransform->vel += a * -dt;
+        }
+}
 
 
 

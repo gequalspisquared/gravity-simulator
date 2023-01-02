@@ -41,6 +41,7 @@ namespace ncp
 
         void init(const std::string &windowName, const std::string &config);
         void setPaused(bool paused);
+        void computeForces(const EntityVec &objects);
 
         void sMovement();
         void sUserInput();
