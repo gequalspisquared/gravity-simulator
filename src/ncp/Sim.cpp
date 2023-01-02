@@ -114,7 +114,7 @@ void ncp::Sim::setPaused(bool paused)
 
 void ncp::Sim::sMovement()
 {
-    computeForces(m_entities.getEntities("Gravity"));
+    computeGravityForces(m_entities.getEntities("Gravity"));
     // newton method for now
     for (auto &e : m_entities.getEntities("Gravity")) {
         e->cTransform->pos += e->cTransform->vel * dt;
@@ -180,11 +180,11 @@ void ncp::Sim::sRender()
     glfwPollEvents();
 }
 
-void ncp::Sim::computeForces(const EntityVec &objects)
+void ncp::Sim::computeGravityForces(const EntityVec &objects)
 {
     size_t nObjects = objects.size();
 
-    for (size_t i = 0; i < nObjects - 1; i++)
+    for (size_t i = 0; i < nObjects - 1; i++) {
         for (size_t j = i + 1; j < nObjects; j++) {
             const ncp::Vec3 p1 = objects[i]->cTransform->pos;
             const ncp::Vec3 p2 = objects[j]->cTransform->pos;
@@ -198,6 +198,7 @@ void ncp::Sim::computeForces(const EntityVec &objects)
             objects[i]->cTransform->vel += a * dt;
             objects[j]->cTransform->vel += a * -dt;
         }
+    }
 }
 
 
