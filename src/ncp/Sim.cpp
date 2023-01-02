@@ -1,3 +1,9 @@
+/*
+    TODO: Add glowing bodies
+    TODO: Make screen size a variable rather than hard code
+    TODO: Determine units (eg. "mass = 1" is 1 solar mass)
+*/
+
 #include <iostream>
 #include <string>
 
