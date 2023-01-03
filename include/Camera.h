@@ -48,6 +48,7 @@ public:
     void processKeyboard(CameraMovement direction, float dt);
     void processMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
     void processMouseScroll(float yoffset);
+    void lookAt(const glm::vec3 &pointToLookAt);
 
 private:
     void updateCameraVectors();

@@ -2,6 +2,7 @@
     TODO: Add glowing bodies
     TODO: Make screen size a variable rather than hard code
     TODO: Determine units (eg. "mass = 1" is 1 solar mass)
+    TODO: Add camera following functionality
 */
 
 #include <iostream>
@@ -46,7 +47,7 @@ void ncp::Sim::run()
     std::cout << "Running\n";
     while (m_running) {
         double currentFrame = glfwGetTime();
-        dt = currentFrame - lastFrame;
+        dt = std::min(currentFrame - lastFrame, 0.1);
         lastFrame = currentFrame;
 
         m_entities.update();
@@ -89,7 +90,7 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
     auto skybox = m_entities.addEntity("Skybox");
     skybox->cSkybox = std::make_shared<CSkybox>(faces);
 
-    stbi_set_flip_vertically_on_load(true);
+    // stbi_set_flip_vertically_on_load(true);
 
     m_skyboxShader = Shader("../shaders/skybox.vs", "../shaders/skybox.fs");
     m_modelShader  = Shader("../shaders/model_loading.vs", "../shaders/model_loading.fs");
@@ -97,7 +98,7 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
     auto mars = m_entities.addEntity("Gravity");
     mars->cTransform = std::make_shared<CTransform>(
         ncp::Vec3(0.0, 0.0, 0.0),
-        ncp::Vec3(0.0, 0.2, 0.0),
+        ncp::Vec3(0.0, 0.25, 0.0),
         ncp::Vec3(0.0, 0.0, 0.0)
     );
     mars->cModel = std::make_shared<CModel>("../res/mars/mars.obj");
@@ -106,7 +107,7 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
     auto earth = m_entities.addEntity("Gravity");
     earth->cTransform = std::make_shared<CTransform>(
         ncp::Vec3(2.0, 0.0, 0.0),
-        ncp::Vec3(0.0, -0.2, 0.0),
+        ncp::Vec3(0.0, -0.25, 0.0),
         ncp::Vec3(0.0, 0.0, 0.0)
     );
     earth->cModel = std::make_shared<CModel>("../res/earth/earth.obj");
@@ -121,6 +122,7 @@ void ncp::Sim::setPaused(bool paused)
 void ncp::Sim::sMovement()
 {
     computeGravityForces(m_entities.getEntities("Gravity"));
+
     // newton method for now
     for (auto &e : m_entities.getEntities("Gravity")) {
         e->cTransform->pos += e->cTransform->vel * dt;
@@ -145,6 +147,33 @@ void ncp::Sim::sUserInput()
         camera.processKeyboard(UP, dt);
     if(glfwGetKey(m_window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         camera.processKeyboard(DOWN, dt);
+    
+    // camera following system
+    static bool following = false;
+    static unsigned int objectToFollow = 0;
+    if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS) {
+        if (following && objectToFollow != 0)
+            following = !following;
+        following = !following;
+        objectToFollow = 0;
+        const ncp::Vec3 vec = m_entities.getEntities("Gravity")[objectToFollow]->cTransform->pos;
+        const glm::vec3 obj(vec.x, vec.y, vec.z);
+        // camera.front = glm::normalize(camera.front - obj);
+        // need to do this in terms of pitch and yaw
+        camera.lookAt(obj);
+        camera.yaw += 10.0f;
+    }
+    if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
+        if (following && objectToFollow != 0)
+            following = !following;
+        following = !following;
+        objectToFollow = 1;
+    }
+    if (following && objectToFollow < m_entities.getEntities("Gravity").size()) {
+        const ncp::Vec3 vec = m_entities.getEntities("Gravity")[objectToFollow]->cTransform->vel * dt;
+        const glm::vec3 ds(vec.x, vec.y, vec.z);
+        camera.position += ds;
+    }
 }
 
 void ncp::Sim::sRender()
@@ -164,13 +193,13 @@ void ncp::Sim::sRender()
     for (size_t i = 0; i < nGravity; i++) {
         glm::mat4 model = glm::mat4(1.0f);
 
-        // render every model
-        m_entities.getEntities("Gravity")[i]->cModel->model.draw(m_modelShader);
-
         ncp::Vec3 entityPos = m_entities.getEntities("Gravity")[i]->cTransform->pos; 
         model = glm::translate(model, glm::vec3(entityPos.x, entityPos.y, entityPos.z));
         model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
         m_modelShader.setMat4("model", model);
+
+        // render every model
+        m_entities.getEntities("Gravity")[i]->cModel->model.draw(m_modelShader);
     }
 
     m_skyboxShader.use();

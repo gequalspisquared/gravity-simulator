@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -77,6 +79,17 @@ void Camera::processMouseScroll(float yoffset)
     zoom -= yoffset;
     if (zoom < 1.0f)  zoom = 1.0f;
     if (zoom > 45.0f) zoom = 45.0f;
+}
+
+void Camera::lookAt(const glm::vec3 &point)
+{
+
+        // camera.front = glm::normalize(camera.front - obj);
+    const glm::vec3 vec = glm::normalize(point - position + front);
+    // yaw += 10.0f;
+    yaw = -atan(vec.y / vec.x);
+    pitch = -asin(vec.z);
+    updateCameraVectors();    
 }
 
 void Camera::updateCameraVectors()
