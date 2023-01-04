@@ -52,7 +52,7 @@ void ncp::Sim::run()
 
         m_entities.update();
 
-        sMovement();
+        if (!m_paused) sMovement();
         sUserInput();
         sRender();
 
@@ -92,8 +92,8 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
 
     // stbi_set_flip_vertically_on_load(true);
 
-    m_skyboxShader = Shader("../shaders/skybox.vs", "../shaders/skybox.fs");
-    m_modelShader  = Shader("../shaders/model_loading.vs", "../shaders/model_loading.fs");
+    m_skyboxShader = Shader("../res/shaders/skybox.vs", "../res/shaders/skybox.fs");
+    m_modelShader  = Shader("../res/shaders/model_loading.vs", "../res/shaders/model_loading.fs");
 
     auto mars = m_entities.addEntity("Gravity");
     mars->cTransform = std::make_shared<CTransform>(
@@ -101,7 +101,7 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
         ncp::Vec3(0.0, 0.25, 0.0),
         ncp::Vec3(0.0, 0.0, 0.0)
     );
-    mars->cModel = std::make_shared<CModel>("../res/mars/mars.obj");
+    mars->cModel = std::make_shared<CModel>("../res/planets/mars/mars.obj");
     mars->cGravity = std::make_shared<CGravity>(1.0);
 
     auto earth = m_entities.addEntity("Gravity");
@@ -110,8 +110,17 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
         ncp::Vec3(0.0, -0.25, 0.0),
         ncp::Vec3(0.0, 0.0, 0.0)
     );
-    earth->cModel = std::make_shared<CModel>("../res/earth/earth.obj");
+    earth->cModel = std::make_shared<CModel>("../res/planets/earth/earth.obj");
     earth->cGravity = std::make_shared<CGravity>(1.0);
+
+    auto venus = m_entities.addEntity("Gravity");
+    venus->cTransform = std::make_shared<CTransform>(
+        ncp::Vec3(0.0, 0.0, 2.0),
+        ncp::Vec3(0.0, 0.0, 0.0),
+        ncp::Vec3(0.0, 0.0, 0.0)
+    );
+    venus->cModel = std::make_shared<CModel>("../res/planets/venus/venus.obj");
+    venus->cGravity = std::make_shared<CGravity>(1.0);
 }
 
 void ncp::Sim::setPaused(bool paused)
@@ -147,6 +156,9 @@ void ncp::Sim::sUserInput()
         camera.processKeyboard(UP, dt);
     if(glfwGetKey(m_window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         camera.processKeyboard(DOWN, dt);
+
+    if (glfwGetKey(m_window, GLFW_KEY_P) == GLFW_PRESS)
+        m_paused = !m_paused;
     
     // camera following system
     static bool following = false;
@@ -163,10 +175,15 @@ void ncp::Sim::sUserInput()
         }
     }
     if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
-        if (following && objectToFollow != 0)
+        if (following && objectToFollow != 1)
             following = !following;
         following = !following;
         objectToFollow = 1;
+        if (following) {
+            const ncp::Vec3 vec = m_entities.getEntities("Gravity")[objectToFollow]->cTransform->pos;
+            const glm::vec3 obj(vec.x, vec.y, vec.z);
+            camera.lookAt(obj);
+        }
     }
     if (following && objectToFollow < m_entities.getEntities("Gravity").size()) {
         const ncp::Vec3 vec = m_entities.getEntities("Gravity")[objectToFollow]->cTransform->vel * dt;
@@ -224,11 +241,15 @@ void ncp::Sim::computeGravityForces(const EntityVec &objects)
             const ncp::Vec3 p1 = objects[i]->cTransform->pos;
             const ncp::Vec3 p2 = objects[j]->cTransform->pos;
             const ncp::Vec3 r  = p2 - p1;
+            const double    d  = r.mag();
 
             const double m1 = objects[i]->cGravity->mass;
             const double m2 = objects[j]->cGravity->mass;
 
-            const ncp::Vec3 a = r * (0.5 * m1 * m2 / (r.mag2() * r.mag()));
+            constexpr double minr  = 0.5;
+            constexpr double minr3 = minr * minr * minr;
+
+            const ncp::Vec3 a = r * (0.5 * m1 * m2 / std::max(d*d*d, minr3));
 
             objects[i]->cTransform->vel += a * dt;
             objects[j]->cTransform->vel += a * -dt;

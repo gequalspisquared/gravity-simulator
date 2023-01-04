@@ -37,6 +37,8 @@ namespace ncp
         Vec3 operator*(const double scale) const;
         Vec3 operator/(const double scale) const;
     };
+
+    Vec3 normalize(const Vec3 &vec);
 }
 
 #endif

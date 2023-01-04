@@ -106,3 +106,8 @@ Vec3 Vec3::operator/(const double scale) const
 {
     return Vec3(x / scale, y / scale, z / scale);
 }
+
+Vec3 normalize(const Vec3 &vec)
+{
+    return vec / vec.mag();
+}
