@@ -32,7 +32,8 @@ public:
     void setMat4(const std::string &name, const glm::mat4 &mat) const;
 
 private:
-    void checkCompilerErrors(unsigned int shader, std::string type);
+    GLuint compileShader(const char *shaderPath, GLenum shaderType) const;
+    void checkCompilerErrors(unsigned int shader, std::string type) const;
 };
 
 #endif

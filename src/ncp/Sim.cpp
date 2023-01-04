@@ -156,12 +156,11 @@ void ncp::Sim::sUserInput()
             following = !following;
         following = !following;
         objectToFollow = 0;
-        const ncp::Vec3 vec = m_entities.getEntities("Gravity")[objectToFollow]->cTransform->pos;
-        const glm::vec3 obj(vec.x, vec.y, vec.z);
-        // camera.front = glm::normalize(camera.front - obj);
-        // need to do this in terms of pitch and yaw
-        camera.lookAt(obj);
-        camera.yaw += 10.0f;
+        if (following) {
+            const ncp::Vec3 vec = m_entities.getEntities("Gravity")[objectToFollow]->cTransform->pos;
+            const glm::vec3 obj(vec.x, vec.y, vec.z);
+            camera.lookAt(obj);
+        }
     }
     if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS) {
         if (following && objectToFollow != 0)

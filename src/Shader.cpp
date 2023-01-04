@@ -8,25 +8,20 @@
 
 #include "../include/Shader.h"
 
-Shader::Shader(const char *vertexPath, const char *fragmentPath)
+GLuint Shader::compileShader(const char *shaderPath, GLenum shaderType) const
 {
-    std::string   vertexCode,  fragmentCode;
-    std::ifstream vShaderFile, fShaderFile;
+    std::string shaderCode;
+    std::ifstream shaderFile;
 
-    vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
     try
     {
-        vShaderFile.open(vertexPath);
-        fShaderFile.open(fragmentPath);
-        std::stringstream vShaderStream, fShaderStream;
-        vShaderStream << vShaderFile.rdbuf();
-        fShaderStream << fShaderFile.rdbuf();
-        vShaderFile.close();
-        fShaderFile.close();
-        vertexCode   = vShaderStream.str();
-        fragmentCode = fShaderStream.str();
+        shaderFile.open(shaderPath);
+        std::stringstream shaderStream;
+        shaderStream << shaderFile.rdbuf();
+        shaderFile.close();
+        shaderCode = shaderStream.str();
     }
     catch(const std::exception& e)
     {
@@ -34,18 +29,23 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath)
                   << e.what() << '\n';
     }
     
-    const char *vShaderCode = vertexCode.c_str();
-    const char *fShaderCode = fragmentCode.c_str();
-    unsigned int vertex, fragment;
+    const char *shaderCode_c = shaderCode.c_str();
+    unsigned int shader;
 
-    vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vShaderCode, NULL);
-    glCompileShader(vertex);
-    checkCompilerErrors(vertex, "VERTEX");
-    fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fShaderCode, NULL);
-    glCompileShader(fragment);
-    checkCompilerErrors(fragment, "FRAGMENT");
+    shader = glCreateShader(shaderType);
+    glShaderSource(shader, 1, &shaderCode_c, NULL);
+    glCompileShader(shader);
+    if (shaderType == GL_VERTEX_SHADER)
+        checkCompilerErrors(shader, "VERTEX");
+    else
+        checkCompilerErrors(shader, "FRAGMENT");
+    return shader;
+}
+
+Shader::Shader(const char *vertexPath, const char *fragmentPath)
+{
+    GLuint vertex = compileShader(vertexPath, GL_VERTEX_SHADER);
+    GLuint fragment = compileShader(fragmentPath, GL_FRAGMENT_SHADER);
 
     ID = glCreateProgram();
     glAttachShader(ID, vertex);
@@ -121,7 +121,7 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }
 
-void Shader::checkCompilerErrors(unsigned int shader, std::string type)
+void Shader::checkCompilerErrors(unsigned int shader, std::string type) const
 {
     int success;
     char infoLog[1024];

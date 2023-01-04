@@ -83,12 +83,9 @@ void Camera::processMouseScroll(float yoffset)
 
 void Camera::lookAt(const glm::vec3 &point)
 {
-
-        // camera.front = glm::normalize(camera.front - obj);
-    const glm::vec3 vec = glm::normalize(point - position + front);
-    // yaw += 10.0f;
-    yaw = -atan(vec.y / vec.x);
-    pitch = -asin(vec.z);
+    const glm::vec3 vec = glm::normalize(point - position);
+    yaw = atan2(vec.z , vec.x) * 180.0f / M_PI;
+    pitch = asin(vec.y) * 180.0f / M_PI;
     updateCameraVectors();    
 }
 
