@@ -36,6 +36,7 @@ bool firstMouse = true;
 float lastX = 800.0f, lastY = 450.0f;
 
 GLFWwindow *initializeGLFW(unsigned int windowWidth, unsigned int windowHeight);
+void spawnRock(EntityManager &entities);
 
 ncp::Sim::Sim(const std::string &windowName, const std::string &config)
 {
@@ -45,10 +46,12 @@ ncp::Sim::Sim(const std::string &windowName, const std::string &config)
 void ncp::Sim::run()
 {
     std::cout << "Running\n";
+    double total_time = 0;
     while (m_running) {
         double currentFrame = glfwGetTime();
         dt = std::min(currentFrame - lastFrame, 0.1);
         lastFrame = currentFrame;
+        total_time += dt;
 
         m_entities.update();
 
@@ -59,6 +62,8 @@ void ncp::Sim::run()
         m_currentFrame++;
     }
 
+    std::cout << m_entities.getEntities("Gravity").size() << " objects, " 
+              << m_currentFrame / total_time << " fps \n";
     glfwSetWindowShouldClose(m_window, true);
     glfwTerminate();
 }
@@ -101,7 +106,7 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
         ncp::Vec3(0.0, 0.25, 0.0),
         ncp::Vec3(0.0, 0.0, 0.0)
     );
-    mars->cModel = std::make_shared<CModel>("../res/planets/mars/mars.obj");
+    mars->cModel = std::make_shared<CModel>("../res/planets/mars/mars.obj", 0.2);
     mars->cGravity = std::make_shared<CGravity>(1.0);
 
     auto earth = m_entities.addEntity("Gravity");
@@ -110,7 +115,7 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
         ncp::Vec3(0.0, -0.25, 0.0),
         ncp::Vec3(0.0, 0.0, 0.0)
     );
-    earth->cModel = std::make_shared<CModel>("../res/planets/earth/earth.obj");
+    earth->cModel = std::make_shared<CModel>("../res/planets/earth/earth.obj", 0.2);
     earth->cGravity = std::make_shared<CGravity>(1.0);
 
     auto venus = m_entities.addEntity("Gravity");
@@ -119,7 +124,7 @@ void ncp::Sim::init(const std::string &windowName, const std::string &config)
         ncp::Vec3(0.0, 0.0, 0.0),
         ncp::Vec3(0.0, 0.0, 0.0)
     );
-    venus->cModel = std::make_shared<CModel>("../res/planets/venus/venus.obj");
+    venus->cModel = std::make_shared<CModel>("../res/planets/venus/venus.obj", 0.2);
     venus->cGravity = std::make_shared<CGravity>(1.0);
 }
 
@@ -159,6 +164,9 @@ void ncp::Sim::sUserInput()
 
     if (glfwGetKey(m_window, GLFW_KEY_P) == GLFW_PRESS)
         m_paused = !m_paused;
+    
+    if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT == GLFW_PRESS))
+        spawnRock(m_entities);
     
     // camera following system
     static bool following = false;
@@ -211,7 +219,8 @@ void ncp::Sim::sRender()
 
         ncp::Vec3 entityPos = m_entities.getEntities("Gravity")[i]->cTransform->pos; 
         model = glm::translate(model, glm::vec3(entityPos.x, entityPos.y, entityPos.z));
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+        const float modelScale = m_entities.getEntities("Gravity")[i]->cModel->scale; 
+        model = glm::scale(model, glm::vec3(modelScale, modelScale, modelScale));
         m_modelShader.setMat4("model", model);
 
         // render every model
@@ -236,6 +245,7 @@ void ncp::Sim::computeGravityForces(const EntityVec &objects)
 {
     size_t nObjects = objects.size();
 
+    #pragma omp for
     for (size_t i = 0; i < nObjects - 1; i++) {
         for (size_t j = i + 1; j < nObjects; j++) {
             const ncp::Vec3 p1 = objects[i]->cTransform->pos;
@@ -287,4 +297,16 @@ GLFWwindow *initializeGLFW(unsigned int windowWidth, unsigned int windowHeight)
     }    
 
     return window;
+}
+
+void spawnRock(EntityManager &entities)
+{
+    auto rock = entities.addEntity("Gravity");
+    rock->cTransform = std::make_shared<CTransform>(
+        ncp::Vec3(camera.position.x, camera.position.y, camera.position.z),
+        ncp::Vec3(camera.front.x, camera.front.y, camera.front.z),
+        ncp::Vec3(0.0, 0.0, 0.0)
+    );
+    rock->cModel = std::make_shared<CModel>("../res/planets/asteroid/asteroid.obj", 0.1);
+    rock->cGravity = std::make_shared<CGravity>(0.3);
 }

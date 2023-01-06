@@ -35,9 +35,11 @@ class CModel
 {
 public:
     Model model;
+    float scale = 1.0f;
 
-    CModel(const char *path)
+    CModel(const char *path, float scale)
         : model(Model(path))
+        , scale(scale)
     {
     }
 };
